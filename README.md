@@ -8,4 +8,4 @@ The full write-up is attached as `Stock-Picks-Data-Centers.docx` and linked
 from the page.
 
 Prices are Stock Analysis quotes from October 26, 2026, 11:30–11:34 AM ET, and
-match the Word document. Total invested is $19,706.18 of the $20,000 budget.
+match the Word document. Total invested is $21,043.64, inside the $20,000–$25,000 budget.
