@@ -8,10 +8,10 @@ A minimal, black-and-white site for the business class portfolio.
   symbol, price per share, shares and total cost for all 13 stocks, and links
   the full Word write-up (`Stock-Picks-Data-Centers.docx`). Total invested is
   $21,043.64, inside the $20,000–$25,000 budget.
-- **Weekly** tab: each week shows last week's and this week's price and total,
-  the difference per stock, and the profit or loss since purchase. A week picker
-  shows any earlier week, and every week can be downloaded as
-  `weekly-tracker.csv`.
+- **Weekly** tab: last week's and this week's price and total for each stock,
+  the difference, and the profit or loss. Profit/loss started at $0.00 and each
+  week adds that week's difference. Weeks that roll off the page are saved in
+  `Weekly-Archive.docx`, linked from the tab.
 
 Prices are live Stock Analysis quotes taken at the moment of each update.
 
@@ -25,5 +25,5 @@ Older weeks are never edited.
 |---|---|
 | `portfolio.csv` | Original holdings and purchase prices |
 | `history.csv` | Every week's prices (append only) |
-| `build.js` | Generates both pages and the CSV, and checks the math |
-| `tools/build_doc.js` | Rebuilds the Word write-up (`npm install` first) |
+| `build.js` | Generates both pages and the weekly archive, and checks the math (`npm install` first) |
+| `tools/build_doc.js` | Rebuilds the Word write-up |

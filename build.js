@@ -1,10 +1,16 @@
-// Builds index.html (Picks), weekly.html (Weekly) and weekly-tracker.csv
-// from portfolio.csv and history.csv. Run: node build.js
+// Builds index.html (Picks), weekly.html (Weekly) and Weekly-Archive.docx
+// from portfolio.csv and history.csv. Run: npm install (once), then node build.js
 const fs = require('fs');
 const path = require('path');
+const JSZip = require('jszip');
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType,
+  AlignmentType, BorderStyle, PageOrientation, TableLayoutType,
+} = require('docx');
 
 const DIR = __dirname;
 const DOCX = 'Stock-Picks-Data-Centers.docx';
+const ARCHIVE = 'Weekly-Archive.docx';
 const BUDGET_MIN_C = 2000000;
 const BUDGET_MAX_C = 2500000;
 
@@ -31,7 +37,6 @@ function toInt(s, where) {
 
 const usd = (c) => '$' + (Math.abs(c) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const signed = (c) => (c > 0 ? '+' : c < 0 ? '−' : '') + usd(c);
-const plain = (c) => (c < 0 ? '-' : '') + (Math.abs(c) / 100).toFixed(2);
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const longDate = (iso) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const shortDate = (iso) => new Date(iso + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -98,19 +103,31 @@ const weeks = dates.map((date, i) => {
   const thisC = rows.reduce((a, r) => a + r.thisC, 0);
   const lastC = prev ? rows.reduce((a, r) => a + r.lastC, 0) : null;
   const diffC = prev ? rows.reduce((a, r) => a + r.diffC, 0) : null;
-  return { date, prevDate, rows, thisC, lastC, diffC, plC: thisC - purchaseC, times: timeRange([...day.values()].map((v) => v.time)) };
+  return { date, prevDate, rows, thisC, lastC, diffC, times: timeRange([...day.values()].map((v) => v.time)) };
 });
 
-// Week 1 is the purchase itself, so profit/loss starts at exactly $0.00.
+// The first week is the purchase itself.
 const first = byDate.get(dates[0]);
 holdings.forEach((h) => {
   const r = first.get(h.symbol);
   if (r.priceC !== h.buyC || r.shares !== h.shares) throw new Error(`${dates[0]} ${h.symbol} must match portfolio.csv`);
 });
-weeks.forEach((w, i) => {
-  if (i === 0 && w.plC !== 0) throw new Error('first week profit/loss must be $0.00');
-  if (i > 0 && w.plC !== weeks[i - 1].plC + w.diffC) throw new Error(`${w.date}: profit/loss does not reconcile with last week plus this week's difference`);
-});
+
+// Profit/loss starts at $0.00 and carries forward: each week adds its difference
+// to last week's saved amount. Unspent budget is never counted.
+weeks.forEach((w, i) => { w.plC = i === 0 ? 0 : weeks[i - 1].plC + w.diffC; });
+// Cross-check: with shares unchanged, the carried amount equals stock value minus purchase cost.
+weeks.forEach((w) => { if (w.plC !== w.thisC - purchaseC) throw new Error(`${w.date}: profit/loss does not reconcile`); });
+
+const plNote = (w, i) => (i === 0
+  ? 'Starting point. Each update adds that week’s difference.'
+  : `Last week’s ${signed(weeks[i - 1].plC)} plus this week’s difference of ${signed(w.diffC)}`);
+
+// The website shows only the latest week. Earlier weeks (after the starting week,
+// whose prices appear as week 2's "last week") roll off into the Word archive.
+const latestIndex = weeks.length - 1;
+const latest = weeks[latestIndex];
+const archived = weeks.slice(1, -1).map((w, k) => ({ w, i: k + 1 })).reverse();
 
 // ---- shared page parts ----
 const head = (title, description) => `<!doctype html>
@@ -173,23 +190,6 @@ const head = (title, description) => `<!doctype html>
     .download:hover, .download:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
     .download span { color: var(--muted); }
     .download:hover span, .download:focus-visible span { color: inherit; }
-    .picker { display: flex; align-items: center; gap: 12px; margin-top: 40px; font-size: 15px; }
-    .picker label { color: var(--muted); }
-    .picker select {
-      appearance: none;
-      -webkit-appearance: none;
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--fg);
-      border-radius: 0;
-      font: inherit;
-      padding: 8px 36px 8px 12px;
-      background-image: linear-gradient(45deg, transparent 50%, var(--fg) 50%), linear-gradient(135deg, var(--fg) 50%, transparent 50%);
-      background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
-      background-size: 5px 5px;
-      background-repeat: no-repeat;
-    }
-    .week .table-wrap { margin-top: 32px; }
     .week table { min-width: 860px; }
     th.group { text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
     thead tr + tr th { padding-top: 8px; }
@@ -197,6 +197,7 @@ const head = (title, description) => `<!doctype html>
     .pl { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--fg); }
     .pl-label { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
     .pl-value { margin-top: 6px; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .later { margin-top: 56px; }
     @media (max-width: 600px) {
       main { padding: 32px 16px 64px; }
       .tabs { margin-bottom: 32px; }
@@ -220,7 +221,7 @@ const tabs = (current) => `    <nav class="tabs" aria-label="Pages">
 
 // ---- Picks tab ----
 const sectorCount = new Set(holdings.map((h) => h.sector)).size;
-const kb = Math.round(fs.statSync(path.join(DIR, DOCX)).size / 1024);
+const kb = (file) => Math.round(fs.statSync(path.join(DIR, file)).size / 1024);
 const picksRows = holdings.map((h) => `        <tr>
           <td>${esc(h.company)}</td>
           <td class="sym">${h.symbol}</td>
@@ -263,20 +264,17 @@ ${picksRows}
     </div>
     <p class="note">Budget $20,000 to $25,000</p>
 
-    <a class="download" href="${DOCX}" download>Download the full write-up <span>(Word, ${kb} KB)</span></a>
+    <a class="download" href="${DOCX}" download>Download the full write-up <span>(Word, ${kb(DOCX)} KB)</span></a>
   </main>
 </body>
 </html>
 `;
 
-// ---- Weekly tab ----
+// ---- Weekly tab: the latest week only ----
 const dash = '<span class="empty">—</span>';
 const cellC = (c, fmt = usd) => (c === null ? dash : fmt(c));
-const newestFirst = [...weeks].reverse();
-
-const weekSection = (w, i) => {
-  const lastLabel = w.prevDate ? `Last week &middot; ${shortDate(w.prevDate)}` : 'Last week';
-  const body = w.rows.map((r) => `            <tr>
+const lastLabel = latest.prevDate ? `Last week &middot; ${shortDate(latest.prevDate)}` : 'Last week';
+const weeklyRows = latest.rows.map((r) => `            <tr>
               <td>${esc(r.h.company)}</td>
               <td class="sym">${r.h.symbol}</td>
               <td class="num">${r.shares}</td>
@@ -286,9 +284,19 @@ const weekSection = (w, i) => {
               <td class="num">${usd(r.thisC)}</td>
               <td class="num">${cellC(r.diffC, signed)}</td>
             </tr>`).join('\n');
-  const compared = w.prevDate ? `compared with ${longDate(w.prevDate)}` : 'starting week, so there is no last week yet';
-  return `    <section class="week" data-week="${w.date}"${i === 0 ? '' : ' hidden'}>
-      <p class="meta">Prices as of ${longDate(w.date)}, ${w.times} &middot; ${compared}</p>
+const compared = latest.prevDate ? `compared with ${longDate(latest.prevDate)}` : 'starting week, so there is no last week yet';
+const archiveBlock = archived.length
+  ? `    <a class="download" href="${ARCHIVE}" download>Download past weeks <span>(Word)</span></a>`
+  : '    <p class="note later">Past weeks are saved to a Word document once they roll off this page.</p>';
+
+const weekly = `${head('Weekly Tracker', 'This week and last week’s prices, totals and profit or loss for the stock picks portfolio.')}
+<body>
+  <main class="wide">
+${tabs('weekly')}
+    <h1>Weekly Tracker</h1>
+    <p class="meta">Prices as of ${longDate(latest.date)}, ${latest.times} &middot; ${compared}</p>
+
+    <section class="week">
       <div class="table-wrap">
         <table>
           <thead>
@@ -297,7 +305,7 @@ const weekSection = (w, i) => {
               <th scope="col" rowspan="2">Symbol</th>
               <th scope="col" rowspan="2" class="num">Shares</th>
               <th scope="colgroup" colspan="2" class="group">${lastLabel}</th>
-              <th scope="colgroup" colspan="2" class="group">This week &middot; ${shortDate(w.date)}</th>
+              <th scope="colgroup" colspan="2" class="group">This week &middot; ${shortDate(latest.date)}</th>
               <th scope="col" rowspan="2" class="num">Difference</th>
             </tr>
             <tr>
@@ -308,7 +316,7 @@ const weekSection = (w, i) => {
             </tr>
           </thead>
           <tbody>
-${body}
+${weeklyRows}
           </tbody>
           <tfoot>
             <tr>
@@ -316,68 +324,113 @@ ${body}
               <td></td>
               <td></td>
               <td></td>
-              <td class="num">${cellC(w.lastC)}</td>
+              <td class="num">${cellC(latest.lastC)}</td>
               <td></td>
-              <td class="num">${usd(w.thisC)}</td>
-              <td class="num">${cellC(w.diffC, signed)}</td>
+              <td class="num">${usd(latest.thisC)}</td>
+              <td class="num">${cellC(latest.diffC, signed)}</td>
             </tr>
           </tfoot>
         </table>
       </div>
       <div class="pl">
-        <p class="pl-label">Profit / loss since purchase</p>
-        <p class="pl-value">${signed(w.plC)}</p>
-        <p class="note">${usd(w.thisC)} now vs. ${usd(purchaseC)} paid on ${longDate(dates[0])}</p>
+        <p class="pl-label">Profit / loss</p>
+        <p class="pl-value">${signed(latest.plC)}</p>
+        <p class="note">${plNote(latest, latestIndex)}</p>
       </div>
-    </section>`;
-};
+    </section>
 
-const options = newestFirst.map((w, i) => `        <option value="${w.date}"${i === 0 ? ' selected' : ''}>${longDate(w.date)}${w.prevDate ? '' : ' (start)'}</option>`).join('\n');
-
-const weekly = `${head('Weekly Tracker', 'Week-by-week prices, totals and profit or loss for the stock picks portfolio.')}
-<body>
-  <main class="wide">
-${tabs('weekly')}
-    <h1>Weekly Tracker</h1>
-    <p class="meta">Live prices recorded at the moment of each weekly update</p>
-
-    <div class="picker">
-      <label for="week">Week</label>
-      <select id="week">
-${options}
-      </select>
-    </div>
-
-${newestFirst.map(weekSection).join('\n\n')}
-
-    <a class="download" href="weekly-tracker.csv" download>Download every week <span>(CSV)</span></a>
+${archiveBlock}
   </main>
-  <script>
-    const select = document.getElementById('week');
-    const show = () => document.querySelectorAll('.week').forEach((s) => { s.hidden = s.dataset.week !== select.value; });
-    select.addEventListener('change', show);
-    show();
-  </script>
 </body>
 </html>
 `;
 
-// ---- spreadsheet export: every week, every row, plus a total row per week ----
-const csvCell = (v) => (/[",]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
-const csv = [['week', 'compared_with', 'company', 'symbol', 'shares', 'last_week_price', 'last_week_total', 'this_week_price', 'this_week_total', 'difference', 'profit_loss_since_purchase']];
-weeks.forEach((w) => {
-  w.rows.forEach((r) => csv.push([w.date, w.prevDate || '', r.h.company, r.h.symbol, String(r.shares),
-    r.lastPriceC === null ? '' : plain(r.lastPriceC), r.lastC === null ? '' : plain(r.lastC),
-    plain(r.priceC), plain(r.thisC), r.diffC === null ? '' : plain(r.diffC), '']));
-  csv.push([w.date, w.prevDate || '', 'Total', '', '', '', w.lastC === null ? '' : plain(w.lastC), '', plain(w.thisC),
-    w.diffC === null ? '' : plain(w.diffC), plain(w.plC)]);
-});
+// ---- Word archive of weeks that have rolled off the website ----
+const FONT = 'Calibri';
+const INK = '000000';
+const GRAY = '6E6E6E';
+const LINE = { style: BorderStyle.SINGLE, size: 4, color: 'BFBFBF' };
+const DARK = { style: BorderStyle.SINGLE, size: 8, color: INK };
+const NONE = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
+const COLS = [3000, 1100, 1000, 1450, 1650, 1450, 1650, 1660]; // 12,960 DXA = 9" landscape content width
 
-fs.writeFileSync(path.join(DIR, 'index.html'), picks);
-fs.writeFileSync(path.join(DIR, 'weekly.html'), weekly);
-fs.writeFileSync(path.join(DIR, 'weekly-tracker.csv'), csv.map((r) => r.map(csvCell).join(',')).join('\n') + '\n');
+const docRun = (text, o = {}) => new TextRun({ text, font: FONT, color: INK, ...o });
+function docCell(text, i, o = {}) {
+  const right = i >= 2;
+  return new TableCell({
+    width: { size: COLS[i], type: WidthType.DXA },
+    borders: { top: o.top || NONE, bottom: o.bottom || LINE, left: NONE, right: NONE },
+    margins: { top: 50, bottom: 50, left: i === 0 ? 0 : 80, right: 0 },
+    children: [new Paragraph({
+      alignment: right ? AlignmentType.RIGHT : AlignmentType.LEFT,
+      children: [docRun(text, { bold: o.bold, color: o.color || INK, size: o.size || 19 })],
+    })],
+  });
+}
 
-const latest = weeks.at(-1);
-console.log(`purchase ${usd(purchaseC)} on ${dates[0]}`);
-console.log(`latest week ${latest.date} (${latest.times})${latest.prevDate ? ` vs ${latest.prevDate}` : ''}`);
-console.log(`  this week ${usd(latest.thisC)}  difference ${latest.diffC === null ? 'n/a' : signed(latest.diffC)}  profit/loss ${signed(latest.plC)}`);
+function archiveWeek({ w, i }, first) {
+  const header = ['Company', 'Symbol', 'Shares', `${shortDate(w.prevDate)} price`, `${shortDate(w.prevDate)} total`,
+    `${shortDate(w.date)} price`, `${shortDate(w.date)} total`, 'Difference'];
+  const rows = [
+    new TableRow({ tableHeader: true, children: header.map((t, c) => docCell(t, c, { bold: true, color: GRAY, size: 17, bottom: DARK })) }),
+    ...w.rows.map((r) => new TableRow({ children: [r.h.company, r.h.symbol, String(r.shares), usd(r.lastPriceC), usd(r.lastC),
+      usd(r.priceC), usd(r.thisC), signed(r.diffC)].map((t, c) => docCell(t, c)) })),
+    new TableRow({ children: ['Total', '', '', '', usd(w.lastC), '', usd(w.thisC), signed(w.diffC)]
+      .map((t, c) => docCell(t, c, { bold: true, top: DARK, bottom: NONE })) }),
+  ];
+  return [
+    new Paragraph({ pageBreakBefore: !first, spacing: { before: first ? 0 : 0, after: 60 },
+      children: [docRun(`Week of ${longDate(w.date)}`, { bold: true, size: 30 })] }),
+    new Paragraph({ spacing: { after: 200 },
+      children: [docRun(`Prices as of ${longDate(w.date)}, ${w.times} · compared with ${longDate(w.prevDate)}`, { color: GRAY, size: 19 })] }),
+    new Table({
+      width: { size: 12960, type: WidthType.DXA }, columnWidths: COLS, layout: TableLayoutType.FIXED, rows,
+      borders: { top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE },
+    }),
+    new Paragraph({ spacing: { before: 280, after: 40 },
+      children: [docRun('Profit / loss: ', { bold: true, size: 24 }), docRun(signed(w.plC), { bold: true, size: 24 })] }),
+    new Paragraph({ children: [docRun(plNote(w, i), { color: GRAY, size: 19 })] }),
+  ];
+}
+
+async function writeArchive() {
+  const file = path.join(DIR, ARCHIVE);
+  if (!archived.length) {
+    if (fs.existsSync(file)) throw new Error(`${ARCHIVE} exists but no weeks have rolled off yet`);
+    return 'no past weeks yet';
+  }
+  const doc = new Document({
+    creator: 'Stock project',
+    title: 'Weekly Tracker Archive',
+    styles: { default: { document: { run: { font: FONT, size: 20, color: INK } } } },
+    sections: [{
+      properties: { page: { size: { width: 12240, height: 15840, orientation: PageOrientation.LANDSCAPE },
+        margin: { top: 1080, bottom: 1080, left: 1440, right: 1440 } } },
+      children: [
+        new Paragraph({ spacing: { after: 60 }, children: [docRun('Weekly Tracker Archive', { bold: true, size: 40 })] }),
+        new Paragraph({ spacing: { after: 360 }, children: [docRun(
+          'Weeks that have rolled off the website, newest first. Profit/loss carries forward: each week adds its difference to the week before.',
+          { color: GRAY, size: 19 })] }),
+        ...archived.flatMap((a, k) => archiveWeek(a, k === 0)),
+      ],
+    }],
+  });
+  const buf = await Packer.toBuffer(doc);
+  // Skip rewriting when only the embedded timestamps would change.
+  if (fs.existsSync(file)) {
+    const xml = async (b) => (await JSZip.loadAsync(b)).file('word/document.xml').async('string');
+    if (await xml(buf) === await xml(fs.readFileSync(file))) return 'unchanged';
+  }
+  fs.writeFileSync(file, buf);
+  return `${archived.length} past week${archived.length === 1 ? '' : 's'}`;
+}
+
+(async () => {
+  fs.writeFileSync(path.join(DIR, 'index.html'), picks);
+  fs.writeFileSync(path.join(DIR, 'weekly.html'), weekly);
+  const archiveStatus = await writeArchive();
+  console.log(`purchase ${usd(purchaseC)} on ${dates[0]}`);
+  console.log(`weekly tab ${latest.date} (${latest.times})${latest.prevDate ? ` vs ${latest.prevDate}` : ''}`);
+  console.log(`  this week ${usd(latest.thisC)}  difference ${latest.diffC === null ? 'n/a' : signed(latest.diffC)}  profit/loss ${signed(latest.plC)}`);
+  console.log(`archive: ${archiveStatus}`);
+})().catch((e) => { console.error(e.message); process.exit(1); });

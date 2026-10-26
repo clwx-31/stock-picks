@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Weekly Tracker</title>
-  <meta name="description" content="Week-by-week prices, totals and profit or loss for the stock picks portfolio.">
+  <meta name="description" content="This week and last week’s prices, totals and profit or loss for the stock picks portfolio.">
   <style>
     :root { --fg: #000; --bg: #fff; --muted: #6e6e6e; --rule: #e6e6e6; }
     @media (prefers-color-scheme: dark) {
@@ -58,23 +58,6 @@
     .download:hover, .download:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
     .download span { color: var(--muted); }
     .download:hover span, .download:focus-visible span { color: inherit; }
-    .picker { display: flex; align-items: center; gap: 12px; margin-top: 40px; font-size: 15px; }
-    .picker label { color: var(--muted); }
-    .picker select {
-      appearance: none;
-      -webkit-appearance: none;
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--fg);
-      border-radius: 0;
-      font: inherit;
-      padding: 8px 36px 8px 12px;
-      background-image: linear-gradient(45deg, transparent 50%, var(--fg) 50%), linear-gradient(135deg, var(--fg) 50%, transparent 50%);
-      background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
-      background-size: 5px 5px;
-      background-repeat: no-repeat;
-    }
-    .week .table-wrap { margin-top: 32px; }
     .week table { min-width: 860px; }
     th.group { text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
     thead tr + tr th { padding-top: 8px; }
@@ -82,6 +65,7 @@
     .pl { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--fg); }
     .pl-label { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
     .pl-value { margin-top: 6px; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .later { margin-top: 56px; }
     @media (max-width: 600px) {
       main { padding: 32px 16px 64px; }
       .tabs { margin-bottom: 32px; }
@@ -104,17 +88,9 @@
       <a href="weekly.html" aria-current="page">Weekly</a>
     </nav>
     <h1>Weekly Tracker</h1>
-    <p class="meta">Live prices recorded at the moment of each weekly update</p>
+    <p class="meta">Prices as of Oct 26, 2026, 11:30–11:34 AM ET &middot; starting week, so there is no last week yet</p>
 
-    <div class="picker">
-      <label for="week">Week</label>
-      <select id="week">
-        <option value="2026-10-26" selected>Oct 26, 2026 (start)</option>
-      </select>
-    </div>
-
-    <section class="week" data-week="2026-10-26">
-      <p class="meta">Prices as of Oct 26, 2026, 11:30–11:34 AM ET &middot; starting week, so there is no last week yet</p>
+    <section class="week">
       <div class="table-wrap">
         <table>
           <thead>
@@ -280,19 +256,13 @@
         </table>
       </div>
       <div class="pl">
-        <p class="pl-label">Profit / loss since purchase</p>
+        <p class="pl-label">Profit / loss</p>
         <p class="pl-value">$0.00</p>
-        <p class="note">$21,043.64 now vs. $21,043.64 paid on Oct 26, 2026</p>
+        <p class="note">Starting point. Each update adds that week’s difference.</p>
       </div>
     </section>
 
-    <a class="download" href="weekly-tracker.csv" download>Download every week <span>(CSV)</span></a>
+    <p class="note later">Past weeks are saved to a Word document once they roll off this page.</p>
   </main>
-  <script>
-    const select = document.getElementById('week');
-    const show = () => document.querySelectorAll('.week').forEach((s) => { s.hidden = s.dataset.week !== select.value; });
-    select.addEventListener('change', show);
-    show();
-  </script>
 </body>
 </html>

@@ -58,23 +58,6 @@
     .download:hover, .download:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
     .download span { color: var(--muted); }
     .download:hover span, .download:focus-visible span { color: inherit; }
-    .picker { display: flex; align-items: center; gap: 12px; margin-top: 40px; font-size: 15px; }
-    .picker label { color: var(--muted); }
-    .picker select {
-      appearance: none;
-      -webkit-appearance: none;
-      background: var(--bg);
-      color: var(--fg);
-      border: 1px solid var(--fg);
-      border-radius: 0;
-      font: inherit;
-      padding: 8px 36px 8px 12px;
-      background-image: linear-gradient(45deg, transparent 50%, var(--fg) 50%), linear-gradient(135deg, var(--fg) 50%, transparent 50%);
-      background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
-      background-size: 5px 5px;
-      background-repeat: no-repeat;
-    }
-    .week .table-wrap { margin-top: 32px; }
     .week table { min-width: 860px; }
     th.group { text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
     thead tr + tr th { padding-top: 8px; }
@@ -82,6 +65,7 @@
     .pl { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--fg); }
     .pl-label { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
     .pl-value { margin-top: 6px; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .later { margin-top: 56px; }
     @media (max-width: 600px) {
       main { padding: 32px 16px 64px; }
       .tabs { margin-bottom: 32px; }
