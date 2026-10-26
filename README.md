@@ -2,10 +2,28 @@
 
 Published website: https://clwx-31.github.io/stock-picks/
 
-A one-page, black-and-white table of the 13 stock picks for the business class
-portfolio: company, symbol, price per share, shares purchased, and total cost.
-The full write-up is attached as `Stock-Picks-Data-Centers.docx` and linked
-from the page.
+A minimal, black-and-white site for the business class portfolio.
 
-Prices are Stock Analysis quotes from October 26, 2026, 11:30–11:34 AM ET, and
-match the Word document. Total invested is $21,043.64, inside the $20,000–$25,000 budget.
+- **Picks** tab: the original purchase on Oct 26, 2026. It lists the company,
+  symbol, price per share, shares and total cost for all 13 stocks, and links
+  the full Word write-up (`Stock-Picks-Data-Centers.docx`). Total invested is
+  $21,043.64, inside the $20,000–$25,000 budget.
+- **Weekly** tab: each week shows last week's and this week's price and total,
+  the difference per stock, and the profit or loss since purchase. A week picker
+  shows any earlier week, and every week can be downloaded as
+  `weekly-tracker.csv`.
+
+Prices are live Stock Analysis quotes taken at the moment of each update.
+
+## Updating
+
+Say "update the stocks". [AGENTS.md](AGENTS.md) holds the full procedure: add
+this week's prices to `history.csv`, run `node build.js`, then commit and push.
+Older weeks are never edited.
+
+| File | Purpose |
+|---|---|
+| `portfolio.csv` | Original holdings and purchase prices |
+| `history.csv` | Every week's prices (append only) |
+| `build.js` | Generates both pages and the CSV, and checks the math |
+| `tools/build_doc.js` | Rebuilds the Word write-up (`npm install` first) |

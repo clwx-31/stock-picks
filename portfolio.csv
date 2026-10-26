@@ -1,0 +1,14 @@
+symbol,company,sector,shares,buy_price
+EME,EMCOR Group,Industrials,5,668.73
+PWR,Quanta Services,Industrials,4,570.49
+STRL,Sterling Infrastructure,Industrials,4,370.09
+VMC,Vulcan Materials,Materials,7,262.30
+DLR,Digital Realty,Real Estate,11,173.53
+MSFT,Microsoft,Information Technology,2,529.95
+GOOGL,Alphabet,Communication Services,4,320.38
+TJX,TJX Companies,Consumer Discretionary,9,144.99
+PG,Procter & Gamble,Consumer Staples,8,159.81
+JNJ,Johnson & Johnson,Health Care,5,265.93
+JPM,JPMorgan Chase,Financials,4,334.52
+NEE,NextEra Energy,Utilities,16,82.17
+XOM,Exxon Mobil,Energy,7,183.64

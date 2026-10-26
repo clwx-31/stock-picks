@@ -1,0 +1,12 @@
+{
+  "name": "stock-picks",
+  "private": true,
+  "description": "Builds the stock picks website and Word write-up",
+  "scripts": {
+    "build": "node build.js",
+    "doc": "node tools/build_doc.js"
+  },
+  "devDependencies": {
+    "docx": "9.5.1"
+  }
+}

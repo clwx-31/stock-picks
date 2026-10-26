@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weekly Tracker</title>
+  <meta name="description" content="Week-by-week prices, totals and profit or loss for the stock picks portfolio.">
+  <style>
+    :root { --fg: #000; --bg: #fff; --muted: #6e6e6e; --rule: #e6e6e6; }
+    @media (prefers-color-scheme: dark) {
+      :root { --fg: #fff; --bg: #000; --muted: #9a9a9a; --rule: #262626; }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 760px; margin: 0 auto; padding: 64px 24px 96px; }
+    main.wide { max-width: 1040px; }
+    .tabs { display: flex; gap: 28px; margin-bottom: 48px; font-size: 15px; }
+    .tabs a { color: var(--muted); text-decoration: none; padding-bottom: 4px; border-bottom: 1px solid transparent; }
+    .tabs a:hover { color: var(--fg); }
+    .tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--fg); }
+    h1 { font-size: 32px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; }
+    .meta { margin-top: 10px; color: var(--muted); font-size: 15px; }
+    .table-wrap { margin-top: 56px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    th {
+      padding: 0 0 12px;
+      border-bottom: 1px solid var(--fg);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-align: left;
+      text-transform: uppercase;
+      vertical-align: bottom;
+    }
+    td { padding: 15px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+    th + th, td + td { padding-left: 20px; }
+    .num { text-align: right; white-space: nowrap; }
+    .sym { font-weight: 500; letter-spacing: 0.02em; }
+    tfoot td { border-top: 1px solid var(--fg); border-bottom: 0; font-weight: 600; }
+    .note { margin-top: 16px; color: var(--muted); font-size: 14px; }
+    .download {
+      display: inline-block;
+      margin-top: 56px;
+      padding: 13px 22px;
+      border: 1px solid var(--fg);
+      color: var(--fg);
+      font-size: 15px;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .download:hover, .download:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
+    .download span { color: var(--muted); }
+    .download:hover span, .download:focus-visible span { color: inherit; }
+    .picker { display: flex; align-items: center; gap: 12px; margin-top: 40px; font-size: 15px; }
+    .picker label { color: var(--muted); }
+    .picker select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--bg);
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      border-radius: 0;
+      font: inherit;
+      padding: 8px 36px 8px 12px;
+      background-image: linear-gradient(45deg, transparent 50%, var(--fg) 50%), linear-gradient(135deg, var(--fg) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+      background-size: 5px 5px;
+      background-repeat: no-repeat;
+    }
+    .week .table-wrap { margin-top: 32px; }
+    .week table { min-width: 860px; }
+    th.group { text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
+    thead tr + tr th { padding-top: 8px; }
+    .empty { color: var(--muted); }
+    .pl { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--fg); }
+    .pl-label { color: var(--muted); font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; }
+    .pl-value { margin-top: 6px; font-size: 40px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    @media (max-width: 600px) {
+      main { padding: 32px 16px 64px; }
+      .tabs { margin-bottom: 32px; }
+      h1 { font-size: 26px; }
+      .table-wrap { margin-top: 40px; }
+      table { font-size: 14px; }
+      th { font-size: 11px; letter-spacing: 0.04em; }
+      th + th, td + td { padding-left: 10px; }
+      td { padding: 12px 0; }
+      .week table { min-width: 680px; }
+      .pl-value { font-size: 32px; }
+      .download { display: block; text-align: center; margin-top: 40px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wide">
+    <nav class="tabs" aria-label="Pages">
+      <a href="./">Picks</a>
+      <a href="weekly.html" aria-current="page">Weekly</a>
+    </nav>
+    <h1>Weekly Tracker</h1>
+    <p class="meta">Live prices recorded at the moment of each weekly update</p>
+
+    <div class="picker">
+      <label for="week">Week</label>
+      <select id="week">
+        <option value="2026-10-26" selected>Oct 26, 2026 (start)</option>
+      </select>
+    </div>
+
+    <section class="week" data-week="2026-10-26">
+      <p class="meta">Prices as of Oct 26, 2026, 11:30–11:34 AM ET &middot; starting week, so there is no last week yet</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col" rowspan="2">Company</th>
+              <th scope="col" rowspan="2">Symbol</th>
+              <th scope="col" rowspan="2" class="num">Shares</th>
+              <th scope="colgroup" colspan="2" class="group">Last week</th>
+              <th scope="colgroup" colspan="2" class="group">This week &middot; Oct 26</th>
+              <th scope="col" rowspan="2" class="num">Difference</th>
+            </tr>
+            <tr>
+              <th scope="col" class="num">Price</th>
+              <th scope="col" class="num">Total</th>
+              <th scope="col" class="num">Price</th>
+              <th scope="col" class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>EMCOR Group</td>
+              <td class="sym">EME</td>
+              <td class="num">5</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$668.73</td>
+              <td class="num">$3,343.65</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Quanta Services</td>
+              <td class="sym">PWR</td>
+              <td class="num">4</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$570.49</td>
+              <td class="num">$2,281.96</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Sterling Infrastructure</td>
+              <td class="sym">STRL</td>
+              <td class="num">4</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$370.09</td>
+              <td class="num">$1,480.36</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Vulcan Materials</td>
+              <td class="sym">VMC</td>
+              <td class="num">7</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$262.30</td>
+              <td class="num">$1,836.10</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Digital Realty</td>
+              <td class="sym">DLR</td>
+              <td class="num">11</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$173.53</td>
+              <td class="num">$1,908.83</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Microsoft</td>
+              <td class="sym">MSFT</td>
+              <td class="num">2</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$529.95</td>
+              <td class="num">$1,059.90</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Alphabet</td>
+              <td class="sym">GOOGL</td>
+              <td class="num">4</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$320.38</td>
+              <td class="num">$1,281.52</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>TJX Companies</td>
+              <td class="sym">TJX</td>
+              <td class="num">9</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$144.99</td>
+              <td class="num">$1,304.91</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Procter &amp; Gamble</td>
+              <td class="sym">PG</td>
+              <td class="num">8</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$159.81</td>
+              <td class="num">$1,278.48</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Johnson &amp; Johnson</td>
+              <td class="sym">JNJ</td>
+              <td class="num">5</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$265.93</td>
+              <td class="num">$1,329.65</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>JPMorgan Chase</td>
+              <td class="sym">JPM</td>
+              <td class="num">4</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$334.52</td>
+              <td class="num">$1,338.08</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>NextEra Energy</td>
+              <td class="sym">NEE</td>
+              <td class="num">16</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$82.17</td>
+              <td class="num">$1,314.72</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+            <tr>
+              <td>Exxon Mobil</td>
+              <td class="sym">XOM</td>
+              <td class="num">7</td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td class="num">$183.64</td>
+              <td class="num">$1,285.48</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td class="num"><span class="empty">—</span></td>
+              <td></td>
+              <td class="num">$21,043.64</td>
+              <td class="num"><span class="empty">—</span></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="pl">
+        <p class="pl-label">Profit / loss since purchase</p>
+        <p class="pl-value">$0.00</p>
+        <p class="note">$21,043.64 now vs. $21,043.64 paid on Oct 26, 2026</p>
+      </div>
+    </section>
+
+    <a class="download" href="weekly-tracker.csv" download>Download every week <span>(CSV)</span></a>
+  </main>
+  <script>
+    const select = document.getElementById('week');
+    const show = () => document.querySelectorAll('.week').forEach((s) => { s.hidden = s.dataset.week !== select.value; });
+    select.addEventListener('change', show);
+    show();
+  </script>
+</body>
+</html>
