@@ -98,7 +98,10 @@ const weeks = dates.map((date, i) => {
     }
     const thisC = cur.priceC * cur.shares;
     const lastC = last ? last.priceC * last.shares : null;
-    return { h, shares: cur.shares, lastPriceC: last ? last.priceC : null, lastC, priceC: cur.priceC, thisC, diffC: last ? thisC - lastC : null };
+    const diffC = last ? thisC - lastC : null;
+    const perShareC = last ? cur.priceC - last.priceC : null;
+    if (last && perShareC * cur.shares !== diffC) throw new Error(`${date} ${h.symbol}: per-share difference does not reconcile`);
+    return { h, shares: cur.shares, lastPriceC: last ? last.priceC : null, lastC, priceC: cur.priceC, thisC, perShareC, diffC };
   });
   const thisC = rows.reduce((a, r) => a + r.thisC, 0);
   const lastC = prev ? rows.reduce((a, r) => a + r.lastC, 0) : null;
@@ -190,7 +193,7 @@ const head = (title, description) => `<!doctype html>
     .download:hover, .download:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
     .download span { color: var(--muted); }
     .download:hover span, .download:focus-visible span { color: inherit; }
-    .week table { min-width: 860px; }
+    .week table { min-width: 960px; }
     th.group { text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
     thead tr + tr th { padding-top: 8px; }
     .empty { color: var(--muted); }
@@ -207,7 +210,7 @@ const head = (title, description) => `<!doctype html>
       th { font-size: 11px; letter-spacing: 0.04em; }
       th + th, td + td { padding-left: 10px; }
       td { padding: 12px 0; }
-      .week table { min-width: 680px; }
+      .week table { min-width: 760px; }
       .pl-value { font-size: 32px; }
       .download { display: block; text-align: center; margin-top: 40px; }
     }
@@ -282,6 +285,7 @@ const weeklyRows = latest.rows.map((r) => `            <tr>
               <td class="num">${cellC(r.lastC)}</td>
               <td class="num">${usd(r.priceC)}</td>
               <td class="num">${usd(r.thisC)}</td>
+              <td class="num">${cellC(r.perShareC, signed)}</td>
               <td class="num">${cellC(r.diffC, signed)}</td>
             </tr>`).join('\n');
 const compared = latest.prevDate ? `compared with ${longDate(latest.prevDate)}` : 'starting week, so there is no last week yet';
@@ -306,12 +310,14 @@ ${tabs('weekly')}
               <th scope="col" rowspan="2" class="num">Shares</th>
               <th scope="colgroup" colspan="2" class="group">${lastLabel}</th>
               <th scope="colgroup" colspan="2" class="group">This week &middot; ${shortDate(latest.date)}</th>
-              <th scope="col" rowspan="2" class="num">Difference</th>
+              <th scope="colgroup" colspan="2" class="group">Difference</th>
             </tr>
             <tr>
               <th scope="col" class="num">Price</th>
               <th scope="col" class="num">Total</th>
               <th scope="col" class="num">Price</th>
+              <th scope="col" class="num">Total</th>
+              <th scope="col" class="num">Per share</th>
               <th scope="col" class="num">Total</th>
             </tr>
           </thead>
@@ -327,6 +333,7 @@ ${weeklyRows}
               <td class="num">${cellC(latest.lastC)}</td>
               <td></td>
               <td class="num">${usd(latest.thisC)}</td>
+              <td></td>
               <td class="num">${cellC(latest.diffC, signed)}</td>
             </tr>
           </tfoot>
@@ -352,7 +359,7 @@ const GRAY = '6E6E6E';
 const LINE = { style: BorderStyle.SINGLE, size: 4, color: 'BFBFBF' };
 const DARK = { style: BorderStyle.SINGLE, size: 8, color: INK };
 const NONE = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-const COLS = [3000, 1100, 1000, 1450, 1650, 1450, 1650, 1660]; // 12,960 DXA = 9" landscape content width
+const COLS = [2610, 900, 900, 1350, 1500, 1350, 1500, 1350, 1500]; // 12,960 DXA = 9" landscape content width
 
 const docRun = (text, o = {}) => new TextRun({ text, font: FONT, color: INK, ...o });
 function docCell(text, i, o = {}) {
@@ -370,12 +377,12 @@ function docCell(text, i, o = {}) {
 
 function archiveWeek({ w, i }, first) {
   const header = ['Company', 'Symbol', 'Shares', `${shortDate(w.prevDate)} price`, `${shortDate(w.prevDate)} total`,
-    `${shortDate(w.date)} price`, `${shortDate(w.date)} total`, 'Difference'];
+    `${shortDate(w.date)} price`, `${shortDate(w.date)} total`, 'Difference per share', 'Difference total'];
   const rows = [
     new TableRow({ tableHeader: true, children: header.map((t, c) => docCell(t, c, { bold: true, color: GRAY, size: 17, bottom: DARK })) }),
     ...w.rows.map((r) => new TableRow({ children: [r.h.company, r.h.symbol, String(r.shares), usd(r.lastPriceC), usd(r.lastC),
-      usd(r.priceC), usd(r.thisC), signed(r.diffC)].map((t, c) => docCell(t, c)) })),
-    new TableRow({ children: ['Total', '', '', '', usd(w.lastC), '', usd(w.thisC), signed(w.diffC)]
+      usd(r.priceC), usd(r.thisC), signed(r.perShareC), signed(r.diffC)].map((t, c) => docCell(t, c)) })),
+    new TableRow({ children: ['Total', '', '', '', usd(w.lastC), '', usd(w.thisC), '', signed(w.diffC)]
       .map((t, c) => docCell(t, c, { bold: true, top: DARK, bottom: NONE })) }),
   ];
   return [

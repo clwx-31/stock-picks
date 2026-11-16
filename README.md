@@ -9,7 +9,7 @@ A minimal, black-and-white site for the business class portfolio.
   the full Word write-up (`Stock-Picks-Data-Centers.docx`). Total invested is
   $21,043.64, inside the $20,000–$25,000 budget.
 - **Weekly** tab: last week's and this week's price and total for each stock,
-  the difference, and the profit or loss. Profit/loss started at $0.00 and each
+  the difference for one share and for all shares, and the profit or loss. Profit/loss started at $0.00 and each
   week adds that week's difference. Weeks that roll off the page are saved in
   `Weekly-Archive.docx`, linked from the tab.
 

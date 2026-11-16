@@ -58,7 +58,7 @@
     .download:hover, .download:focus-visible { background: var(--fg); color: var(--bg); outline: none; }
     .download span { color: var(--muted); }
     .download:hover span, .download:focus-visible span { color: inherit; }
-    .week table { min-width: 860px; }
+    .week table { min-width: 960px; }
     th.group { text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
     thead tr + tr th { padding-top: 8px; }
     .empty { color: var(--muted); }
@@ -75,7 +75,7 @@
       th { font-size: 11px; letter-spacing: 0.04em; }
       th + th, td + td { padding-left: 10px; }
       td { padding: 12px 0; }
-      .week table { min-width: 680px; }
+      .week table { min-width: 760px; }
       .pl-value { font-size: 32px; }
       .download { display: block; text-align: center; margin-top: 40px; }
     }
@@ -100,12 +100,14 @@
               <th scope="col" rowspan="2" class="num">Shares</th>
               <th scope="colgroup" colspan="2" class="group">Last week &middot; Nov 10</th>
               <th scope="colgroup" colspan="2" class="group">This week &middot; Nov 16</th>
-              <th scope="col" rowspan="2" class="num">Difference</th>
+              <th scope="colgroup" colspan="2" class="group">Difference</th>
             </tr>
             <tr>
               <th scope="col" class="num">Price</th>
               <th scope="col" class="num">Total</th>
               <th scope="col" class="num">Price</th>
+              <th scope="col" class="num">Total</th>
+              <th scope="col" class="num">Per share</th>
               <th scope="col" class="num">Total</th>
             </tr>
           </thead>
@@ -118,6 +120,7 @@
               <td class="num">$3,253.20</td>
               <td class="num">$642.57</td>
               <td class="num">$3,212.85</td>
+              <td class="num">−$8.07</td>
               <td class="num">−$40.35</td>
             </tr>
             <tr>
@@ -128,6 +131,7 @@
               <td class="num">$2,375.64</td>
               <td class="num">$594.55</td>
               <td class="num">$2,378.20</td>
+              <td class="num">+$0.64</td>
               <td class="num">+$2.56</td>
             </tr>
             <tr>
@@ -138,6 +142,7 @@
               <td class="num">$1,200.00</td>
               <td class="num">$281.12</td>
               <td class="num">$1,124.48</td>
+              <td class="num">−$18.88</td>
               <td class="num">−$75.52</td>
             </tr>
             <tr>
@@ -148,6 +153,7 @@
               <td class="num">$2,002.49</td>
               <td class="num">$279.09</td>
               <td class="num">$1,953.63</td>
+              <td class="num">−$6.98</td>
               <td class="num">−$48.86</td>
             </tr>
             <tr>
@@ -158,6 +164,7 @@
               <td class="num">$2,001.45</td>
               <td class="num">$178.57</td>
               <td class="num">$1,964.27</td>
+              <td class="num">−$3.38</td>
               <td class="num">−$37.18</td>
             </tr>
             <tr>
@@ -168,6 +175,7 @@
               <td class="num">$1,083.14</td>
               <td class="num">$525.53</td>
               <td class="num">$1,051.06</td>
+              <td class="num">−$16.04</td>
               <td class="num">−$32.08</td>
             </tr>
             <tr>
@@ -178,6 +186,7 @@
               <td class="num">$1,161.36</td>
               <td class="num">$288.99</td>
               <td class="num">$1,155.96</td>
+              <td class="num">−$1.35</td>
               <td class="num">−$5.40</td>
             </tr>
             <tr>
@@ -188,6 +197,7 @@
               <td class="num">$1,225.80</td>
               <td class="num">$132.42</td>
               <td class="num">$1,191.78</td>
+              <td class="num">−$3.78</td>
               <td class="num">−$34.02</td>
             </tr>
             <tr>
@@ -198,6 +208,7 @@
               <td class="num">$1,339.20</td>
               <td class="num">$172.41</td>
               <td class="num">$1,379.28</td>
+              <td class="num">+$5.01</td>
               <td class="num">+$40.08</td>
             </tr>
             <tr>
@@ -208,6 +219,7 @@
               <td class="num">$1,401.90</td>
               <td class="num">$285.18</td>
               <td class="num">$1,425.90</td>
+              <td class="num">+$4.80</td>
               <td class="num">+$24.00</td>
             </tr>
             <tr>
@@ -218,6 +230,7 @@
               <td class="num">$1,370.88</td>
               <td class="num">$343.35</td>
               <td class="num">$1,373.40</td>
+              <td class="num">+$0.63</td>
               <td class="num">+$2.52</td>
             </tr>
             <tr>
@@ -228,6 +241,7 @@
               <td class="num">$1,376.96</td>
               <td class="num">$85.43</td>
               <td class="num">$1,366.88</td>
+              <td class="num">−$0.63</td>
               <td class="num">−$10.08</td>
             </tr>
             <tr>
@@ -238,6 +252,7 @@
               <td class="num">$1,146.04</td>
               <td class="num">$168.24</td>
               <td class="num">$1,177.68</td>
+              <td class="num">+$4.52</td>
               <td class="num">+$31.64</td>
             </tr>
           </tbody>
@@ -250,6 +265,7 @@
               <td class="num">$20,938.06</td>
               <td></td>
               <td class="num">$20,755.37</td>
+              <td></td>
               <td class="num">−$182.69</td>
             </tr>
           </tfoot>

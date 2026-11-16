@@ -19,8 +19,9 @@ Run `npm install` once if `node_modules/` is missing; `build.js` needs it.
 ## How the Weekly tab works
 
 - It shows exactly two prices per stock: last week's and this week's, each
-  with its total (price × shares), then Difference = this week's total − last
-  week's total, with a total row.
+  with its total (price × shares), then two Difference columns: per share =
+  this week's price − last week's price, and total = this week's total − last
+  week's total (per share × shares). The total row sums the totals only.
 - Profit/loss started at $0.00 on Oct 26, 2026. Each update adds that week's
   total difference to last week's profit/loss, and the result is carried to the
   next week. Unspent budget (the rest of the $20,000–$25,000) is never counted.
@@ -51,8 +52,8 @@ write-up record the original purchase and do not change.
    profit/loss forward and archives the week that rolled off. It stops if a
    price is missing, dates are out of order, shares changed, or the
    profit/loss does not reconcile.
-5. Recheck independently in integer cents: each row's totals and difference,
-   the column totals, and last week's profit/loss + this week's difference =
+5. Recheck independently in integer cents: each row's totals, per-share
+   difference and total difference, the column totals, and last week's profit/loss + this week's difference =
    this week's profit/loss.
 6. `git diff --stat` must show only `history.csv`, `weekly.html` and
    `Weekly-Archive.docx` (the archive appears from the second update on). Run
